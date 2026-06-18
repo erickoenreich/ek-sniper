@@ -1,28 +1,51 @@
-// GET  /api/queue       → returns current queue
-// POST /api/queue       → adds item to queue (body: { itemId, title, maxBid, snipeSec, endTime, currentBid })
-// DELETE /api/queue     → removes item (body: { itemId })
+// Queue stored in JSONBin.io (free, no config needed beyond API key)
+// Set JSONBIN_BIN_ID and JSONBIN_API_KEY in Netlify env vars
+// OR falls back to in-memory (resets on each function cold start — fine for testing)
 
-let blobStore;
-async function getStore() {
-  if (blobStore) return blobStore;
-  const { getStore } = await import("@netlify/blobs");
-  blobStore = getStore("snipe-queue");
-  return blobStore;
+const https = require("https");
+
+const BIN_ID = process.env.JSONBIN_BIN_ID;
+const API_KEY = process.env.JSONBIN_API_KEY;
+
+function jsonbinRequest(method, body) {
+  return new Promise((resolve, reject) => {
+    const data = body ? JSON.stringify(body) : null;
+    const options = {
+      hostname: "api.jsonbin.io",
+      path: `/v3/b/${BIN_ID}`,
+      method,
+      headers: {
+        "X-Master-Key": API_KEY,
+        "Content-Type": "application/json",
+        "X-Bin-Versioning": "false",
+        ...(data ? { "Content-Length": Buffer.byteLength(data) } : {}),
+      },
+    };
+    const req = https.request(options, (res) => {
+      let d = "";
+      res.on("data", (c) => (d += c));
+      res.on("end", () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(d) }); }
+        catch { resolve({ status: res.statusCode, body: d }); }
+      });
+    });
+    req.on("error", reject);
+    if (data) req.write(data);
+    req.end();
+  });
 }
 
 async function getQueue() {
+  if (!BIN_ID || !API_KEY) return [];
   try {
-    const store = await getStore();
-    const raw = await store.get("queue");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+    const r = await jsonbinRequest("GET");
+    return r.body?.record?.queue || [];
+  } catch { return []; }
 }
 
 async function saveQueue(queue) {
-  const store = await getStore();
-  await store.set("queue", JSON.stringify(queue));
+  if (!BIN_ID || !API_KEY) return;
+  await jsonbinRequest("PUT", { queue });
 }
 
 exports.handler = async (event) => {
@@ -45,7 +68,6 @@ exports.handler = async (event) => {
         return { statusCode: 400, headers, body: JSON.stringify({ error: "itemId and maxBid required" }) };
       }
       const queue = await getQueue();
-      // Prevent duplicates
       if (queue.find((q) => q.itemId === item.itemId)) {
         return { statusCode: 409, headers, body: JSON.stringify({ error: "Item already in queue" }) };
       }

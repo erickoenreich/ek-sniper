@@ -1,36 +1,51 @@
-// Scheduled function: runs every minute via netlify.toml schedule
-// Reads the snipe queue from Netlify Blobs (persistent storage),
-// checks each auction's end time, and fires bids when within snipe window.
-
 const https = require("https");
 
-// --- Netlify Blobs helpers (built into Netlify runtime) ---
-let blobStore;
-async function getStore() {
-  if (blobStore) return blobStore;
-  const { getStore } = await import("@netlify/blobs");
-  blobStore = getStore("snipe-queue");
-  return blobStore;
+const BIN_ID = process.env.JSONBIN_BIN_ID;
+const API_KEY = process.env.JSONBIN_API_KEY;
+
+function jsonbinRequest(method, body) {
+  return new Promise((resolve, reject) => {
+    const data = body ? JSON.stringify(body) : null;
+    const options = {
+      hostname: "api.jsonbin.io",
+      path: `/v3/b/${BIN_ID}`,
+      method,
+      headers: {
+        "X-Master-Key": API_KEY,
+        "Content-Type": "application/json",
+        "X-Bin-Versioning": "false",
+        ...(data ? { "Content-Length": Buffer.byteLength(data) } : {}),
+      },
+    };
+    const req = https.request(options, (res) => {
+      let d = "";
+      res.on("data", (c) => (d += c));
+      res.on("end", () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(d) }); }
+        catch { resolve({ status: res.statusCode, body: d }); }
+      });
+    });
+    req.on("error", reject);
+    if (data) req.write(data);
+    req.end();
+  });
 }
 
 async function getQueue() {
+  if (!BIN_ID || !API_KEY) return [];
   try {
-    const store = await getStore();
-    const raw = await store.get("queue");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+    const r = await jsonbinRequest("GET");
+    return r.body?.record?.queue || [];
+  } catch { return []; }
 }
 
 async function saveQueue(queue) {
-  const store = await getStore();
-  await store.set("queue", JSON.stringify(queue));
+  if (!BIN_ID || !API_KEY) return;
+  await jsonbinRequest("PUT", { queue });
 }
 
-// --- Place bid by calling our own ebay-bid function ---
-async function triggerBid(itemId, maxBid, siteUrl) {
-  return new Promise((resolve, reject) => {
+async function placeBid(itemId, maxBid, siteUrl) {
+  return new Promise((resolve) => {
     const body = JSON.stringify({ itemId, maxBid });
     const url = new URL(`${siteUrl}/api/ebay-bid`);
     const options = {
@@ -40,133 +55,76 @@ async function triggerBid(itemId, maxBid, siteUrl) {
       headers: {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(body),
-        "X-Sniper-Secret": process.env.SNIPER_SECRET || "",
       },
     };
     const req = https.request(options, (res) => {
-      let data = "";
-      res.on("data", (c) => (data += c));
+      let d = "";
+      res.on("data", (c) => (d += c));
       res.on("end", () => {
-        try { resolve(JSON.parse(data)); }
+        try { resolve(JSON.parse(d)); }
         catch { resolve({ success: false, error: "parse error" }); }
       });
     });
-    req.on("error", reject);
+    req.on("error", () => resolve({ success: false, error: "network error" }));
     req.write(body);
     req.end();
   });
 }
 
-// --- Fetch current auction state from eBay Browse API ---
-async function getCurrentPrice(itemId, appToken) {
-  return new Promise((resolve) => {
-    const options = {
-      hostname: "api.ebay.com",
-      path: `/buy/browse/v1/item/v1|${itemId}|0`,
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${appToken}`,
-        "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
-      },
-    };
-    const req = https.request(options, (res) => {
-      let data = "";
-      res.on("data", (c) => (data += c));
-      res.on("end", () => {
-        try {
-          const json = JSON.parse(data);
-          resolve({
-            currentBid: parseFloat(json.currentBidPrice?.value || json.price?.value || 0),
-            endTime: json.itemEndDate,
-            ended: json.itemEndDate ? new Date(json.itemEndDate) < new Date() : false,
-          });
-        } catch {
-          resolve({ currentBid: 0, endTime: null, ended: false });
-        }
-      });
-    });
-    req.on("error", () => resolve({ currentBid: 0, endTime: null, ended: false }));
-    req.end();
-  });
-}
-
-async function getAppToken() {
-  const { getAppToken } = require("./ebay-auth");
-  return getAppToken();
-}
-
-exports.handler = async (event) => {
-  const siteUrl = process.env.URL || "https://your-site.netlify.app";
+exports.handler = async () => {
+  const siteUrl = process.env.URL || "";
   const now = Date.now();
 
   let queue = await getQueue();
   if (queue.length === 0) return { statusCode: 200, body: "Queue empty" };
 
-  let appToken;
-  try { appToken = await getAppToken(); } catch { appToken = null; }
-
   const logs = [];
-  const updatedQueue = [];
+  let changed = false;
 
   for (const item of queue) {
-    // Skip already completed items older than 24h
-    if (item.status === "won" || item.status === "lost") {
-      const completedAt = item.completedAt || 0;
-      if (now - completedAt > 86400000) continue; // prune after 24h
-      updatedQueue.push(item);
-      continue;
-    }
-
-    // Refresh current price + end time from eBay if we have a token
-    if (appToken && item.itemId) {
-      const live = await getCurrentPrice(item.itemId, appToken);
-      if (live.endTime) item.endTime = live.endTime;
-      if (live.currentBid) item.currentBid = live.currentBid;
-      if (live.ended && item.status !== "sniped") {
-        item.status = "lost";
-        item.completedAt = now;
-        logs.push(`[${new Date().toISOString()}] EXPIRED (no snipe fired): ${item.title} (${item.itemId})`);
-        updatedQueue.push(item);
-        continue;
-      }
-    }
+    if (item.status === "won" || item.status === "lost") continue;
 
     const endMs = item.endTime ? new Date(item.endTime).getTime() : 0;
     const secondsLeft = (endMs - now) / 1000;
 
-    // Fire the snipe if within the configured window
     if (secondsLeft > 0 && secondsLeft <= item.snipeSec && item.status === "watching") {
       item.status = "sniped";
-      logs.push(`[${new Date().toISOString()}] SNIPING: ${item.title} (${item.itemId}) max $${item.maxBid} — ${secondsLeft.toFixed(1)}s left`);
+      changed = true;
+      logs.push(`SNIPING: ${item.itemId} — ${secondsLeft.toFixed(1)}s left, max $${item.maxBid}`);
 
       try {
-        const result = await triggerBid(item.itemId, item.maxBid, siteUrl);
-        item.bidResult = result;
+        const result = await placeBid(item.itemId, item.maxBid, siteUrl);
         if (result.success) {
           item.status = "won";
-          item.completedAt = now;
           item.finalPrice = result.currentPrice;
-          logs.push(`  → BID SUCCESS: won at $${result.currentPrice}`);
+          item.completedAt = now;
+          logs.push(`  → WON at $${result.currentPrice}`);
         } else {
           item.status = "lost";
           item.completedAt = now;
-          logs.push(`  → BID FAILED: ${result.error}`);
+          logs.push(`  → LOST: ${result.error}`);
         }
       } catch (err) {
         item.status = "lost";
         item.completedAt = now;
-        logs.push(`  → BID ERROR: ${err.message}`);
+        logs.push(`  → ERROR: ${err.message}`);
       }
     }
 
-    updatedQueue.push(item);
+    // Clean up old completed items after 24h
+    if ((item.status === "won" || item.status === "lost") && item.completedAt) {
+      if (now - item.completedAt > 86400000) {
+        item._prune = true;
+        changed = true;
+      }
+    }
   }
 
-  await saveQueue(updatedQueue);
-  console.log(logs.join("\n"));
+  if (changed) {
+    queue = queue.filter(i => !i._prune);
+    await saveQueue(queue);
+  }
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ processed: queue.length, logs }),
-  };
+  console.log(logs.join("\n"));
+  return { statusCode: 200, body: JSON.stringify({ logs }) };
 };
