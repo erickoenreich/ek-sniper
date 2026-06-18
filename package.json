@@ -1,0 +1,12 @@
+{
+  "name": "ek-sniper",
+  "version": "1.0.0",
+  "description": "EK Sniper — eBay auction sniper for EK Cards",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
