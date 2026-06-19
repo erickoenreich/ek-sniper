@@ -15,6 +15,7 @@ function cardApiRequest(query, extraParams) {
     });
     const options = {
       hostname: "thecardapi.com",
+      port: 443,
       path: `/api/v1/market/sales?${params.toString()}`,
       method: "GET",
       headers: {
