@@ -6,221 +6,134 @@
 <title>EK Sniper</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0d0d0f;
-    --bg2: #17171a;
-    --bg3: #1e1e23;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #f0f0f0;
-    --text2: #8a8a9a;
-    --text3: #555560;
-    --red: #E24B4A;
-    --red-dim: rgba(226,75,74,0.15);
-    --green: #4ade80;
-    --green-dim: rgba(74,222,128,0.12);
-    --amber: #f59e0b;
-    --amber-dim: rgba(245,158,11,0.12);
-    --blue: #60a5fa;
-    --blue-dim: rgba(96,165,250,0.12);
-    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --bg: #0d0d0f; --bg2: #17171a; --bg3: #1e1e23;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f0; --text2: #8a8a9a; --text3: #555560;
+    --red: #E24B4A; --red-dim: rgba(226,75,74,0.15);
+    --green: #4ade80; --green-dim: rgba(74,222,128,0.12);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.12);
+    --mono: 'SF Mono','Fira Code',monospace;
   }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    min-height: 100vh;
-  }
-
-  /* Layout */
-  .shell { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:14px; line-height:1.5; min-height:100vh; }
+  .shell { max-width:1100px; margin:0 auto; padding:0 1.5rem 3rem; }
 
   /* Topbar */
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1.25rem 0; border-bottom: 1px solid var(--border);
-    margin-bottom: 1.75rem;
-  }
-  .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
-  .brand em { color: var(--red); font-style: normal; }
-  .engine-status { display: flex; align-items: center; gap: 8px; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-  .dot.off { background: var(--text3); animation: none; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:1.25rem 0; border-bottom:1px solid var(--border); margin-bottom:1.75rem; }
+  .brand { font-size:17px; font-weight:600; letter-spacing:-0.3px; }
+  .brand em { color:var(--red); font-style:normal; }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; display:inline-block; margin-right:6px; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .status-text { font-size: 12px; color: var(--text2); }
+  .status-text { font-size:12px; color:var(--text2); }
 
   /* Metrics */
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.75rem; }
-  .metric {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 1rem 1.125rem;
-  }
-  .metric-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .metric-value { font-size: 26px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
-  .metric-value.green { color: var(--green); }
-  .metric-value.red { color: var(--red); }
-  .metric-value.amber { color: var(--amber); }
+  .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:1.75rem; }
+  .metric { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:1rem 1.125rem; }
+  .metric-label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+  .metric-value { font-size:26px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .metric-value.green { color:var(--green); }
+  .metric-value.red { color:var(--red); }
+  .metric-value.amber { color:var(--amber); }
+
+  /* Tabs */
+  .tabs { display:flex; gap:4px; margin-bottom:1.25rem; border-bottom:1px solid var(--border); padding-bottom:0; }
+  .tab { padding:.6rem 1rem; font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:color .15s,border-color .15s; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--text); border-bottom-color:var(--red); }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
 
   /* Add form */
-  .add-section {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 1.25rem; margin-bottom: 1.75rem;
-  }
-  .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2); margin-bottom: 1rem; }
-  .add-grid { display: grid; grid-template-columns: 1fr 160px 160px 100px; gap: 10px; align-items: end; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label { font-size: 11px; color: var(--text2); }
-  .field input {
-    background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px;
-    color: var(--text); font-size: 13px; height: 38px; padding: 0 11px;
-    outline: none; transition: border-color 0.15s;
-  }
-  .field input:focus { border-color: var(--red); }
-  .field input::placeholder { color: var(--text3); }
+  .add-section { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem; }
+  .section-title { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:var(--text2); margin-bottom:1rem; }
+  .add-grid { display:grid; grid-template-columns:1fr 160px 160px 100px; gap:10px; align-items:end; }
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label { font-size:11px; color:var(--text2); }
+  .field input { background:var(--bg3); border:1px solid var(--border2); border-radius:7px; color:var(--text); font-size:13px; height:38px; padding:0 11px; outline:none; transition:border-color .15s; }
+  .field input:focus { border-color:var(--red); }
+  .field input::placeholder { color:var(--text3); }
+  .add-btn { height:38px; background:var(--red); border:none; border-radius:7px; color:#fff; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s; }
+  .add-btn:hover { background:#c93d3c; }
+  .add-btn:disabled { background:var(--bg3); color:var(--text3); cursor:not-allowed; }
+  .lookup-hint { font-size:11px; color:var(--text3); margin-top:5px; min-height:16px; }
+  .lookup-hint.ok { color:var(--green); }
+  .lookup-hint.err { color:var(--red); }
 
-  .add-btn {
-    height: 38px; background: var(--red); border: none; border-radius: 7px;
-    color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: background 0.15s, transform 0.1s;
-  }
-  .add-btn:hover { background: #c93d3c; }
-  .add-btn:active { transform: scale(0.97); }
-  .add-btn:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
+  /* Queue table */
+  .queue-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:1.75rem; }
+  .queue-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); }
+  table { width:100%; border-collapse:collapse; }
+  th { font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color:var(--text2); text-align:left; padding:10px 14px; border-bottom:1px solid var(--border); background:var(--bg3); }
+  td { padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+  .card-name a { font-weight:500; font-size:13px; color:var(--text); text-decoration:none; }
+  .card-name a:hover { color:var(--red); text-decoration:underline; }
+  .card-sub { font-size:11px; color:var(--text2); margin-top:2px; }
+  .badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; }
+  .badge-watching { background:var(--blue-dim); color:var(--blue); }
+  .badge-sniping  { background:var(--amber-dim); color:var(--amber); }
+  .badge-won      { background:var(--green-dim); color:var(--green); }
+  .badge-lost     { background:var(--red-dim); color:var(--red); }
+  .countdown { font-family:var(--mono); font-size:13px; font-weight:500; }
+  .countdown.urgent { color:var(--red); }
+  .countdown.soon   { color:var(--amber); }
+  .price { font-family:var(--mono); font-size:13px; }
+  .del-btn { background:none; border:none; cursor:pointer; color:var(--text3); font-size:16px; padding:4px 6px; border-radius:5px; transition:color .1s,background .1s; }
+  .del-btn:hover { color:var(--red); background:var(--red-dim); }
+  .empty-row td { text-align:center; padding:2.5rem; color:var(--text3); font-size:13px; }
 
-  .lookup-hint { font-size: 11px; color: var(--text3); margin-top: 5px; min-height: 16px; }
-  .lookup-hint.ok { color: var(--green); }
-  .lookup-hint.err { color: var(--red); }
-
-  /* Queue */
-  .queue-wrap {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 12px; overflow: hidden; margin-bottom: 1.75rem;
-  }
-  .queue-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--text2); text-align: left; padding: 10px 14px;
-    border-bottom: 1px solid var(--border); background: var(--bg3);
-  }
-  td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .card-name { font-weight: 500; font-size: 13px; }
-  .card-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
-
-  .badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
-  }
-  .badge-watching { background: var(--blue-dim); color: var(--blue); }
-  .badge-sniping  { background: var(--amber-dim); color: var(--amber); }
-  .badge-won      { background: var(--green-dim); color: var(--green); }
-  .badge-lost     { background: var(--red-dim); color: var(--red); }
-
-  .countdown { font-family: var(--mono); font-size: 13px; font-weight: 500; }
-  .countdown.urgent { color: var(--red); }
-  .countdown.soon   { color: var(--amber); }
-  .countdown.ok     { color: var(--text); }
-
-  .price { font-family: var(--mono); font-size: 13px; }
-
-  .del-btn {
-    background: none; border: none; cursor: pointer; color: var(--text3);
-    font-size: 16px; padding: 4px 6px; border-radius: 5px; line-height: 1;
-    transition: color 0.1s, background 0.1s;
-  }
-  .del-btn:hover { color: var(--red); background: var(--red-dim); }
-
-  .empty-row td { text-align: center; padding: 2.5rem; color: var(--text3); font-size: 13px; }
+  /* Comps tab */
+  .comps-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+  .comps-query { font-size:12px; color:var(--text2); }
+  .comps-query span { color:var(--text); font-family:var(--mono); }
+  .comps-loading { text-align:center; padding:3rem; color:var(--text3); font-size:13px; }
+  .comps-empty { text-align:center; padding:3rem; color:var(--text3); font-size:13px; }
+  .comps-table-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .comp-link { color:var(--text); text-decoration:none; font-size:13px; font-weight:500; }
+  .comp-link:hover { color:var(--red); }
+  .comp-sub { font-size:11px; color:var(--text2); margin-top:2px; }
+  .ext-icon { font-size:10px; color:var(--text3); margin-left:4px; }
 
   /* Log */
-  .log-section {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
-  }
-  .log-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .log-clear { background: none; border: none; color: var(--text3); font-size: 11px; cursor: pointer; }
-  .log-clear:hover { color: var(--text2); }
-  .log-body { max-height: 260px; overflow-y: auto; }
-  .log-entry {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 9px 1.25rem; border-bottom: 1px solid var(--border);
-    font-size: 12px;
-  }
-  .log-entry:last-child { border-bottom: none; }
-  .log-time { font-family: var(--mono); color: var(--text3); min-width: 54px; flex-shrink: 0; }
-  .log-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-  .log-msg { color: var(--text2); }
-  .log-empty { padding: 1.5rem 1.25rem; color: var(--text3); font-size: 12px; text-align: center; }
+  .log-section { background:var(--bg2); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .log-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .log-clear { background:none; border:none; color:var(--text3); font-size:11px; cursor:pointer; }
+  .log-clear:hover { color:var(--text2); }
+  .log-body { max-height:260px; overflow-y:auto; }
+  .log-entry { display:flex; align-items:flex-start; gap:10px; padding:9px 1.25rem; border-bottom:1px solid var(--border); font-size:12px; }
+  .log-entry:last-child { border-bottom:none; }
+  .log-time { font-family:var(--mono); color:var(--text3); min-width:54px; flex-shrink:0; }
+  .log-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+  .log-msg { color:var(--text2); }
+  .log-empty { padding:1.5rem 1.25rem; color:var(--text3); font-size:12px; text-align:center; }
 
   /* Toast */
-  .toast {
-    position: fixed; bottom: 1.5rem; right: 1.5rem;
-    background: var(--bg3); border: 1px solid var(--border2);
-    border-radius: 9px; padding: .75rem 1rem;
-    font-size: 13px; color: var(--text);
-    display: none; z-index: 999; max-width: 320px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  }
-  .toast.show { display: block; animation: fadeIn 0.2s; }
+  .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--bg3); border:1px solid var(--border2); border-radius:9px; padding:.75rem 1rem; font-size:13px; color:var(--text); display:none; z-index:999; max-width:320px; box-shadow:0 8px 24px rgba(0,0,0,0.5); }
+  .toast.show { display:block; animation:fadeIn 0.2s; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-  /* Setup banner */
-  .setup-banner {
-    background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.25);
-    border-radius: 10px; padding: .875rem 1.125rem;
-    display: flex; align-items: center; gap: 10px;
-    font-size: 12px; color: var(--amber); margin-bottom: 1.5rem;
-  }
-  .setup-banner a { color: var(--amber); }
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
 </style>
 </head>
 <body>
 <div class="shell">
-
   <div class="topbar">
     <div class="brand">EK<em>Sniper</em></div>
-    <div class="engine-status">
-      <div class="dot" id="engineDot"></div>
-      <span class="status-text" id="engineStatus">Engine running</span>
-    </div>
-  </div>
-
-  <div class="setup-banner" id="setupBanner" style="display:none">
-    ⚠ eBay credentials not configured — bids will not fire.
-    See <a href="#setup">setup instructions</a> below.
+    <div><span class="dot"></span><span class="status-text">Engine running</span></div>
   </div>
 
   <div class="metrics">
-    <div class="metric">
-      <div class="metric-label">Watching</div>
-      <div class="metric-value amber" id="mWatching">0</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Sniped today</div>
-      <div class="metric-value" id="mSniped">0</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Won</div>
-      <div class="metric-value green" id="mWon">0</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Lost</div>
-      <div class="metric-value red" id="mLost">0</div>
-    </div>
+    <div class="metric"><div class="metric-label">Watching</div><div class="metric-value amber" id="mWatching">0</div></div>
+    <div class="metric"><div class="metric-label">Sniped today</div><div class="metric-value" id="mSniped">0</div></div>
+    <div class="metric"><div class="metric-label">Won</div><div class="metric-value green" id="mWon">0</div></div>
+    <div class="metric"><div class="metric-label">Lost</div><div class="metric-value red" id="mLost">0</div></div>
   </div>
 
+  <!-- Add form (always visible) -->
   <div class="add-section">
     <div class="section-title">Add auction</div>
     <div class="add-grid">
@@ -238,74 +151,59 @@
         <input type="number" id="snipeSec" value="8" min="3" max="30">
       </div>
       <div class="field">
-        <button class="add-btn" id="addBtn" onclick="handleAdd()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-          </svg>
-          Add
-        </button>
+        <button class="add-btn" id="addBtn" onclick="handleAdd()">+ Add</button>
       </div>
     </div>
   </div>
 
-  <div class="queue-wrap">
-    <div class="queue-header">
-      <div class="section-title" style="margin:0">Snipe queue</div>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:36%">Card</th>
-          <th>Current bid</th>
-          <th>Your max</th>
-          <th>Snipe at</th>
-          <th>Ends in</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="queueBody">
-        <tr class="empty-row"><td colspan="7">No auctions in queue — add one above</td></tr>
-      </tbody>
-    </table>
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('queue')">Snipe Queue</div>
+    <div class="tab" onclick="switchTab('comps')" id="compsTab">Comps <span id="compsBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px"></span></div>
+    <div class="tab" onclick="switchTab('log')">Activity Log</div>
   </div>
 
-  <div class="log-section">
-    <div class="log-header">
-      <div class="section-title" style="margin:0">Activity log</div>
-      <button class="log-clear" onclick="clearLog()">Clear</button>
-    </div>
-    <div class="log-body" id="logBody">
-      <div class="log-empty">No activity yet</div>
-    </div>
-  </div>
-
-  <div id="setup" style="margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid var(--border)">
-    <div class="section-title" style="margin-bottom:.75rem">Setup guide</div>
-    <div style="color:var(--text2); font-size:13px; line-height:1.8; max-width:640px">
-      <p style="margin-bottom:.75rem">This app requires four environment variables set in Netlify → Site settings → Environment variables:</p>
-      <table style="border-collapse:collapse; margin-bottom:1rem">
-        <tr>
-          <td style="padding:5px 14px 5px 0; color:var(--text); font-family:var(--mono); font-size:12px">EBAY_APP_ID</td>
-          <td style="padding:5px 0; color:var(--text2); font-size:12px">Your eBay developer App ID (Client ID)</td>
-        </tr>
-        <tr>
-          <td style="padding:5px 14px 5px 0; color:var(--text); font-family:var(--mono); font-size:12px">EBAY_CERT_ID</td>
-          <td style="padding:5px 0; color:var(--text2); font-size:12px">Your eBay developer Cert ID (Client Secret)</td>
-        </tr>
-        <tr>
-          <td style="padding:5px 14px 5px 0; color:var(--text); font-family:var(--mono); font-size:12px">EBAY_DEV_ID</td>
-          <td style="padding:5px 0; color:var(--text2); font-size:12px">Your eBay developer Dev ID</td>
-        </tr>
-        <tr>
-          <td style="padding:5px 14px 5px 0; color:var(--text); font-family:var(--mono); font-size:12px">EBAY_USER_TOKEN</td>
-          <td style="padding:5px 0; color:var(--text2); font-size:12px">Your eBay user auth token (from developer portal → get token)</td>
-        </tr>
+  <!-- Queue panel -->
+  <div class="tab-panel active" id="panel-queue">
+    <div class="queue-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:36%">Card</th>
+            <th>Current bid</th>
+            <th>Your max</th>
+            <th>Snipe at</th>
+            <th>Ends in</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="queueBody">
+          <tr class="empty-row"><td colspan="7">No auctions in queue — add one above</td></tr>
+        </tbody>
       </table>
-      <p>Get your credentials at <a href="https://developer.ebay.com" target="_blank" style="color:var(--red)">developer.ebay.com</a>. The EBAY_USER_TOKEN is your personal eBay account token — required to place bids on your behalf.</p>
     </div>
   </div>
 
+  <!-- Comps panel -->
+  <div class="tab-panel" id="panel-comps">
+    <div id="compsContent">
+      <div class="comps-empty">Look up an auction above to see comparable listings</div>
+    </div>
+  </div>
+
+  <!-- Log panel -->
+  <div class="tab-panel" id="panel-log">
+    <div class="log-section">
+      <div class="log-header">
+        <div class="section-title" style="margin:0">Activity log</div>
+        <button class="log-clear" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="log-body" id="logBody">
+        <div class="log-empty">No activity yet</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -314,8 +212,20 @@
 const API = '/api';
 let queue = [];
 let logs = JSON.parse(localStorage.getItem('ek_sniper_logs') || '[]');
+let comps = [];
+let compsQuery = '';
 
-// ── Utilities ────────────────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['queue','comps','log'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── Utilities ─────────────────────────────────────────────────
 function fmtTime(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   if (s < 60) return s + 's';
@@ -324,206 +234,77 @@ function fmtTime(ms) {
   const h = Math.floor(m / 60), rm = m % 60;
   return h + 'h ' + rm + 'm';
 }
-
 function urgClass(ms) {
   const s = ms / 1000;
   if (s < 30) return 'urgent';
   if (s < 300) return 'soon';
-  return 'ok';
+  return '';
 }
-
 function badge(status) {
-  const map = {
-    watching: ['badge-watching', 'Watching'],
-    sniping:  ['badge-sniping',  '🎯 Sniping'],
-    won:      ['badge-won',      '✓ Won'],
-    lost:     ['badge-lost',     '✗ Lost'],
-    sniped:   ['badge-sniping',  '🎯 Fired'],
-  };
+  const map = { watching:['badge-watching','Watching'], sniping:['badge-sniping','🎯 Sniping'], won:['badge-won','✓ Won'], lost:['badge-lost','✗ Lost'], sniped:['badge-sniping','🎯 Fired'] };
   const [cls, label] = map[status] || ['badge-watching', status];
   return `<span class="badge ${cls}">${label}</span>`;
 }
-
-function toast(msg, dur = 3000) {
+function toast(msg, dur=3000) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  el.textContent = msg; el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), dur);
 }
+function nowStr() { return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'}); }
+function escHtml(str) { return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-function nowStr() {
-  return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
-}
-
-// ── Log ──────────────────────────────────────────────────────
+// ── Log ───────────────────────────────────────────────────────
 function addLog(icon, color, msg) {
   logs.unshift({ time: nowStr(), icon, color, msg });
   if (logs.length > 100) logs.pop();
   localStorage.setItem('ek_sniper_logs', JSON.stringify(logs));
   renderLog();
 }
-
 function renderLog() {
   const body = document.getElementById('logBody');
-  if (logs.length === 0) { body.innerHTML = '<div class="log-empty">No activity yet</div>'; return; }
-  body.innerHTML = logs.map(l =>
-    `<div class="log-entry">
-      <span class="log-time">${l.time}</span>
-      <span class="log-icon" style="color:${l.color}">${l.icon}</span>
-      <span class="log-msg">${l.msg}</span>
-    </div>`
-  ).join('');
+  if (!logs.length) { body.innerHTML = '<div class="log-empty">No activity yet</div>'; return; }
+  body.innerHTML = logs.map(l => `<div class="log-entry"><span class="log-time">${l.time}</span><span class="log-icon" style="color:${l.color}">${l.icon}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`).join('');
 }
-
 function clearLog() { logs = []; localStorage.removeItem('ek_sniper_logs'); renderLog(); }
 
-// ── Queue from server ─────────────────────────────────────────
+// ── Queue ─────────────────────────────────────────────────────
 async function fetchQueue() {
   try {
     const r = await fetch(`${API}/queue`);
     if (r.ok) { queue = await r.json(); renderQueue(); updateMetrics(); }
-  } catch { /* offline */ }
+  } catch {}
 }
-
 async function removeItem(itemId) {
-  await fetch(`${API}/queue`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ itemId })
-  });
-  addLog('✕', 'var(--text3)', `Removed ${itemId} from queue`);
+  await fetch(`${API}/queue`, { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({itemId}) });
+  addLog('✕','var(--text3)',`Removed ${itemId} from queue`);
   await fetchQueue();
 }
-
-// ── Add auction ───────────────────────────────────────────────
-let lookupTimer = null;
-let lookedUpItem = null;
-
-document.getElementById('urlInput').addEventListener('input', () => {
-  clearTimeout(lookupTimer);
-  const val = document.getElementById('urlInput').value.trim();
-  if (!val) { setHint('', ''); lookedUpItem = null; return; }
-  lookupTimer = setTimeout(() => doLookup(val), 700);
-});
-
-async function doLookup(url) {
-  setHint('Looking up auction…', '');
-  try {
-    const r = await fetch(`${API}/ebay-lookup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
-    });
-    const data = await r.json();
-    if (data.error) { setHint('⚠ ' + data.error, 'err'); lookedUpItem = null; return; }
-    lookedUpItem = data;
-    const end = data.endTime ? new Date(data.endTime) : null;
-    const endStr = end ? end.toLocaleString() : 'unknown';
-    setHint(`✓ ${data.title.slice(0, 55)}${data.title.length > 55 ? '…' : ''} · Current bid $${data.currentBid.toFixed(2)} · Ends ${endStr}`, 'ok');
-  } catch {
-    setHint('⚠ Could not reach eBay API', 'err');
-    lookedUpItem = null;
-  }
-}
-
-function setHint(msg, cls) {
-  const el = document.getElementById('lookupHint');
-  el.textContent = msg;
-  el.className = 'lookup-hint ' + (cls || '');
-}
-
-async function handleAdd() {
-  const url = document.getElementById('urlInput').value.trim();
-  const maxBid = parseFloat(document.getElementById('maxBid').value);
-  const snipeSec = parseInt(document.getElementById('snipeSec').value) || 8;
-
-  if (!url) { toast('Enter a URL or item ID'); return; }
-  if (isNaN(maxBid) || maxBid <= 0) { toast('Enter a valid max bid'); return; }
-
-  const btn = document.getElementById('addBtn');
-  btn.disabled = true; btn.textContent = 'Adding…';
-
-  try {
-    // If lookup already happened, use that data; otherwise do a fresh lookup
-    let item = lookedUpItem;
-    if (!item) {
-      const r = await fetch(`${API}/ebay-lookup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-      item = await r.json();
-      if (item.error) { toast('⚠ ' + item.error); btn.disabled = false; btn.textContent = 'Add'; return; }
-    }
-
-    const payload = {
-      itemId: item.itemId,
-      title: item.title,
-      currentBid: item.currentBid,
-      endTime: item.endTime,
-      maxBid,
-      snipeSec,
-      url: item.url,
-      image: item.image,
-    };
-
-    const r2 = await fetch(`${API}/queue`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const res = await r2.json();
-    if (res.error) { toast('⚠ ' + res.error); return; }
-
-    document.getElementById('urlInput').value = '';
-    document.getElementById('maxBid').value = '';
-    setHint('', '');
-    lookedUpItem = null;
-    addLog('👁', 'var(--blue)', `Added to queue: ${item.title.slice(0, 60)} · max $${maxBid.toFixed(2)}`);
-    toast('Added to snipe queue');
-    await fetchQueue();
-  } catch (err) {
-    toast('Error: ' + err.message);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Add';
-  }
-}
-
-// ── Render queue ──────────────────────────────────────────────
 function renderQueue() {
   const body = document.getElementById('queueBody');
-  if (!queue || queue.length === 0) {
-    body.innerHTML = '<tr class="empty-row"><td colspan="7">No auctions in queue — add one above</td></tr>';
-    return;
-  }
-
+  if (!queue.length) { body.innerHTML = '<tr class="empty-row"><td colspan="7">No auctions in queue — add one above</td></tr>'; return; }
   body.innerHTML = queue.map(item => {
     const rem = item.endTime ? new Date(item.endTime).getTime() - Date.now() : 0;
     const urg = rem > 0 ? urgClass(rem) : '';
     const cdText = rem > 0 ? fmtTime(rem) : 'Ended';
-
+    const titleLink = item.url
+      ? `<a href="${escHtml(item.url)}" target="_blank" rel="noopener">${escHtml(item.title || item.itemId)}</a>`
+      : escHtml(item.title || item.itemId);
     return `<tr>
-      <td>
-        <div class="card-name">${escHtml(item.title || item.itemId)}</div>
-        <div class="card-sub">${item.itemId}${item.seller ? ' · @' + item.seller : ''}</div>
-      </td>
-      <td><span class="price">$${(item.currentBid || 0).toFixed(2)}</span></td>
+      <td><div class="card-name">${titleLink}</div><div class="card-sub">${escHtml(item.itemId)}${item.seller ? ' · @'+escHtml(item.seller) : ''}</div></td>
+      <td><span class="price">$${(item.currentBid||0).toFixed(2)}</span></td>
       <td><span class="price" style="color:#f0f0f0;font-weight:600">$${item.maxBid.toFixed(2)}</span></td>
       <td style="color:var(--text2)">${item.snipeSec}s</td>
       <td><span class="countdown ${urg}">${cdText}</span></td>
-      <td>${badge(item.status || 'watching')}</td>
-      <td>
-        <button class="del-btn" onclick="removeItem('${escHtml(item.itemId)}')" title="Remove">✕</button>
-      </td>
+      <td>${badge(item.status||'watching')}</td>
+      <td><button class="del-btn" onclick="removeItem('${escHtml(item.itemId)}')" title="Remove">✕</button></td>
     </tr>`;
   }).join('');
 }
-
 function updateMetrics() {
   const now = Date.now();
   const active = queue.filter(i => i.endTime && new Date(i.endTime).getTime() > now);
-  const won = queue.filter(i => i.status === 'won').length;
-  const lost = queue.filter(i => i.status === 'lost').length;
+  const won = queue.filter(i => i.status==='won').length;
+  const lost = queue.filter(i => i.status==='lost').length;
   const sniped = queue.filter(i => ['won','lost','sniped'].includes(i.status)).length;
   document.getElementById('mWatching').textContent = active.length;
   document.getElementById('mSniped').textContent = sniped;
@@ -531,18 +312,310 @@ function updateMetrics() {
   document.getElementById('mLost').textContent = lost;
 }
 
-function escHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// ── Lookup + Comps ────────────────────────────────────────────
+let lookupTimer = null;
+let lookedUpItem = null;
+
+document.getElementById('urlInput').addEventListener('input', () => {
+  clearTimeout(lookupTimer);
+  const val = document.getElementById('urlInput').value.trim();
+  if (!val) { setHint('',''); lookedUpItem = null; return; }
+  lookupTimer = setTimeout(() => doLookup(val), 700);
+});
+
+async function doLookup(url) {
+  setHint('Looking up auction…','');
+  try {
+    const r = await fetch(`${API}/ebay-lookup`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url}) });
+    const data = await r.json();
+    if (data.error) { setHint('⚠ '+data.error,'err'); lookedUpItem=null; return; }
+    lookedUpItem = data;
+    const end = data.endTime ? new Date(data.endTime) : null;
+    setHint(`✓ ${data.title.slice(0,55)}${data.title.length>55?'…':''} · $${data.currentBid.toFixed(2)} · Ends ${end?end.toLocaleString():'unknown'}`, 'ok');
+    // Auto-fetch comps
+    fetchComps(data.title, data.itemId);
+  } catch {
+    setHint('⚠ Could not reach eBay API','err');
+    lookedUpItem = null;
+  }
 }
 
-// ── Poll loop ─────────────────────────────────────────────────
-function tick() { renderQueue(); updateMetrics(); }
-setInterval(tick, 1000);
-setInterval(fetchQueue, 30000); // refresh from server every 30s
+function setHint(msg, cls) {
+  const el = document.getElementById('lookupHint');
+  el.textContent = msg; el.className = 'lookup-hint '+(cls||'');
+}
 
-// ── Init ──────────────────────────────────────────────────────
+async function fetchComps(title, excludeItemId) {
+  // Show loading state in comps tab
+  document.getElementById('compsContent').innerHTML = '<div class="comps-loading">🔍 Searching for comparable auctions…</div>';
+  const badge = document.getElementById('compsBadge');
+  badge.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/ebay-comps`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ title, excludeItemId })
+    });
+    const data = await r.json();
+    if (data.error) { document.getElementById('compsContent').innerHTML = `<div class="comps-empty">⚠ ${escHtml(data.error)}</div>`; return; }
+
+    comps = data.items || [];
+    compsQuery = data.query || '';
+    renderComps();
+
+    // Update tab badge
+    if (comps.length) {
+      badge.textContent = comps.length;
+      badge.style.display = 'inline';
+    }
+  } catch {
+    document.getElementById('compsContent').innerHTML = '<div class="comps-empty">Could not load comps</div>';
+  }
+}
+
+function renderComps() {
+  const el = document.getElementById('compsContent');
+  if (!comps.length) {
+    el.innerHTML = '<div class="comps-empty">No comparable active auctions found</div>';
+    return;
+  }
+
+  const rows = comps.map(c => {
+    const rem = c.endTime ? new Date(c.endTime).getTime() - Date.now() : 0;
+    const urg = rem > 0 ? urgClass(rem) : '';
+    const cdText = rem > 0 ? fmtTime(rem) : 'Ended';
+    return `<tr>
+      <td>
+        <div><a class="comp-link" href="${escHtml(c.url)}" target="_blank" rel="noopener">${escHtml(c.title)}</a></div>
+        <div class="comp-sub">${escHtml(c.condition||'')}${c.bidCount ? ' · '+c.bidCount+' bids' : ''}</div>
+      </td>
+      <td><span class="price">$${c.currentBid.toFixed(2)}</span></td>
+      <td><span class="countdown ${urg}">${cdText}</span></td>
+      <td>
+        <a href="${escHtml(c.url)}" target="_blank" rel="noopener" style="color:var(--red);font-size:12px;text-decoration:none">View →</a>
+      </td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="comps-header">
+      <div class="comps-query">Search: <span>${escHtml(compsQuery)}</span> · ${comps.length} active auctions</div>
+    </div>
+    <div class="comps-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50%">Card</th>
+            <th>Current bid</th>
+            <th>Ends in</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── Add auction ───────────────────────────────────────────────
+async function handleAdd() {
+  const url = document.getElementById('urlInput').value.trim();
+  const maxBid = parseFloat(document.getElementById('maxBid').value);
+  const snipeSec = parseInt(document.getElementById('snipeSec').value) || 8;
+  if (!url) { toast('Enter a URL or item ID'); return; }
+  if (isNaN(maxBid) || maxBid <= 0) { toast('Enter a valid max bid'); return; }
+  const btn = document.getElementById('addBtn');
+  btn.disabled=true; btn.textContent='Adding…';
+  try {
+    let item = lookedUpItem;
+    if (!item) {
+      const r = await fetch(`${API}/ebay-lookup`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url}) });
+      item = await r.json();
+      if (item.error) { toast('⚠ '+item.error); return; }
+    }
+    const payload = { itemId:item.itemId, title:item.title, currentBid:item.currentBid, endTime:item.endTime, maxBid, snipeSec, url:item.url, image:item.image };
+    const r2 = await fetch(`${API}/queue`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const res = await r2.json();
+    if (res.error) { toast('⚠ '+res.error); return; }
+    document.getElementById('urlInput').value='';
+    document.getElementById('maxBid').value='';
+    setHint('',''); lookedUpItem=null;
+    addLog('👁','var(--blue)',`Added: ${item.title.slice(0,60)} · max $${maxBid.toFixed(2)}`);
+    toast('Added to snipe queue');
+    await fetchQueue();
+  } catch(err) {
+    toast('Error: '+err.message);
+  } finally {
+    btn.disabled=false; btn.textContent='+ Add';
+  }
+}
+
+// ── Poll ──────────────────────────────────────────────────────
+setInterval(() => { renderQueue(); updateMetrics(); }, 1000);
+setInterval(fetchQueue, 30000);
 renderLog();
 fetchQueue();
 </script>
 </body>
 </html>
+<!-- SCOUT TAB PATCH: injected via script -->
+<script>
+// ── Patch tabs to add Scout ───────────────────────────────────
+(function() {
+  // Add Scout tab button
+  const tabsEl = document.querySelector('.tabs');
+  const scoutTabBtn = document.createElement('div');
+  scoutTabBtn.className = 'tab';
+  scoutTabBtn.textContent = 'Scout';
+  scoutTabBtn.onclick = () => switchTab('scout');
+  tabsEl.appendChild(scoutTabBtn);
+
+  // Add Scout panel
+  const scoutPanel = document.createElement('div');
+  scoutPanel.className = 'tab-panel';
+  scoutPanel.id = 'panel-scout';
+  scoutPanel.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem">
+      <div class="section-title">Grading ROI Scout</div>
+      <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:end">
+        <div class="field">
+          <label>Card name</label>
+          <input type="text" id="scoutInput" placeholder="e.g. 2023 Topps Chrome Ohtani Refractor" style="height:38px">
+        </div>
+        <button class="add-btn" id="scoutBtn" onclick="runScout()" style="height:38px">Analyze</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Uses last 7 days of eBay sold data · $80 grading fee baked in</div>
+    </div>
+    <div id="scoutResults"></div>
+  `;
+  // Insert before the toast
+  document.querySelector('.toast').before(scoutPanel);
+
+  // Patch switchTab to handle scout
+  const origSwitch = window.switchTab;
+  window.switchTab = function(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const names = ['queue', 'comps', 'log', 'scout'];
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById('panel-' + name);
+    if (panel) panel.classList.add('active');
+  };
+
+  // Enter key on scout input
+  document.getElementById('scoutInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runScout();
+  });
+})();
+
+// ── Scout logic ───────────────────────────────────────────────
+async function runScout() {
+  const cardName = document.getElementById('scoutInput').value.trim();
+  if (!cardName) { toast('Enter a card name'); return; }
+
+  const btn = document.getElementById('scoutBtn');
+  btn.disabled = true; btn.textContent = 'Analyzing…';
+
+  const results = document.getElementById('scoutResults');
+  results.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text3);font-size:13px">🔍 Pulling sold data from TheCardAPI…</div>`;
+
+  try {
+    const r = await fetch('/api/scout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardName })
+    });
+    const d = await r.json();
+    if (d.error) { results.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--red);font-size:13px">⚠ ${escHtml(d.error)}</div>`; return; }
+    renderScoutResults(d);
+  } catch (err) {
+    results.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--red);font-size:13px">Error: ${escHtml(err.message)}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Analyze';
+  }
+}
+
+function renderScoutResults(d) {
+  const scoreColor = { green: 'var(--green)', amber: 'var(--amber)', red: 'var(--red)', gray: 'var(--text3)' }[d.scoreGrade.color] || 'var(--text2)';
+
+  function multBadge(mult) {
+    if (!mult) return '<span style="color:var(--text3)">—</span>';
+    const color = mult >= 3 ? 'var(--green)' : mult >= 2 ? 'var(--green)' : mult >= 1.5 ? 'var(--amber)' : mult >= 1 ? 'var(--amber)' : 'var(--red)';
+    return `<span style="color:${color};font-weight:700;font-family:var(--mono)">${mult.toFixed(2)}x</span>`;
+  }
+
+  function priceStr(val) {
+    return val > 0 ? `$${val.toFixed(2)}` : '<span style="color:var(--text3)">No data</span>';
+  }
+
+  function sampleRows(samples) {
+    if (!samples || !samples.length) return '<tr><td colspan="3" style="color:var(--text3);font-size:11px;padding:6px 0">No recent sales found</td></tr>';
+    return samples.map(s => `
+      <tr>
+        <td style="font-size:11px;color:var(--text2);padding:4px 0 4px 0;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <a href="${escHtml(s.url)}" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:none" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.title.slice(0, 60))}${s.title.length > 60 ? '…' : ''}</a>
+        </td>
+        <td style="font-size:12px;font-family:var(--mono);padding:4px 8px;white-space:nowrap;color:var(--text)">$${s.price.toFixed(2)}</td>
+        <td style="font-size:11px;color:var(--text3);padding:4px 0;white-space:nowrap">${s.date || ''}</td>
+      </tr>`).join('');
+  }
+
+  const html = `
+    <!-- Score card -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">EK Scout Score</div>
+        <div style="font-size:42px;font-weight:700;font-family:var(--mono);color:${scoreColor};line-height:1">${d.score ? d.score.toFixed(2) + 'x' : '—'}</div>
+        <div style="font-size:14px;color:${scoreColor};margin-top:6px;font-weight:500">${d.scoreGrade.label}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;text-align:right">
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:3px">Gem rate</div>
+          <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:var(--text)">${d.gemRate !== null ? d.gemRate + '%' : '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:3px">Cost basis</div>
+          <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:var(--text)">$${d.costBasis.toFixed(2)}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:3px">PSA 10 mult</div>
+          <div style="font-size:18px;font-weight:600">${multBadge(d.psa10.multiplier)}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:3px">PSA 9 mult</div>
+          <div style="font-size:18px;font-weight:600">${multBadge(d.psa9.multiplier)}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Three columns: Raw / PSA 9 / PSA 10 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem">
+      ${[
+        { label: 'Raw (ungraded)', data: d.raw, color: 'var(--blue)', mult: null },
+        { label: 'PSA 9', data: d.psa9, color: 'var(--amber)', mult: d.psa9.multiplier },
+        { label: 'PSA 10', data: d.psa10, color: 'var(--green)', mult: d.psa10.multiplier },
+      ].map(col => `
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:${col.color};margin-bottom:.75rem">${col.label}</div>
+          <div style="margin-bottom:.75rem">
+            <div style="font-size:22px;font-weight:600;font-family:var(--mono);color:var(--text)">${priceStr(col.data.avg)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">median · ${col.data.count} sales</div>
+          </div>
+          ${col.mult ? `<div style="font-size:12px;color:var(--text2);margin-bottom:.75rem">Multiplier: ${multBadge(col.mult)}</div>` : ''}
+          <div style="border-top:1px solid var(--border);padding-top:.75rem">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:4px">Recent sales</div>
+            <table style="width:100%">${sampleRows(col.data.samples)}</table>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="font-size:11px;color:var(--text3);padding:.5rem 0">
+      Based on last 7 days of eBay sold listings · Gem rate estimated from sample size · Always verify with PSA pop report
+    </div>
+  `;
+
+  document.getElementById('scoutResults').innerHTML = html;
+}
+</script>
